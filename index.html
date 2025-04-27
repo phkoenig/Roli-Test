@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CursorAI React Test</title>
+    <style>
+        .webcam-container {
+            margin: 20px;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            max-width: 640px;
+        }
+        video {
+            width: 100%;
+            border-radius: 4px;
+            filter: grayscale(100%);
+            -webkit-filter: grayscale(100%); /* Für Safari */
+        }
+        .controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <!-- Root div where our React app will be mounted -->
+    <div id="root"></div>
+
+    <!-- React and ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Our React application code -->
+    <script type="text/babel">
+        // WelcomeMessage component that displays a greeting
+        function WelcomeMessage({ name }) {
+            return <p>Hallo, {name}!</p>;
+        }
+
+        // SimpleCounter component with state management
+        function SimpleCounter() {
+            const [count, setCount] = React.useState(0);
+
+            return (
+                <div>
+                    <p>Aktueller Zähler: {count}</p>
+                    <button onClick={() => setCount(count + 1)}>
+                        Erhöhen
+                    </button>
+                </div>
+            );
+        }
+
+        // Webcam component
+        function Webcam() {
+            const [stream, setStream] = React.useState(null);
+            const videoRef = React.useRef(null);
+
+            const startWebcam = async () => {
+                try {
+                    const mediaStream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: "user" // oder "environment" für die Rückkamera
+                        }
+                    });
+                    setStream(mediaStream);
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = mediaStream;
+                    }
+                } catch (err) {
+                    console.error("Fehler beim Zugriff auf die Webcam:", err);
+                }
+            };
+
+            const stopWebcam = () => {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    setStream(null);
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = null;
+                    }
+                }
+            };
+
+            React.useEffect(() => {
+                return () => {
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                };
+            }, [stream]);
+
+            return (
+                <div className="webcam-container">
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                    />
+                    <div className="controls">
+                        <button onClick={startWebcam}>
+                            Webcam starten
+                        </button>
+                        <button onClick={stopWebcam}>
+                            Webcam stoppen
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Main App component that combines all components
+        function App() {
+            return (
+                <div>
+                    <WelcomeMessage name="Roli & Du" />
+                    <SimpleCounter />
+                    <Webcam />
+                </div>
+            );
+        }
+
+        // Render the app using React 18's createRoot
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html> 
